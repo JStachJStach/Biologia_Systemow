@@ -1,0 +1,126 @@
+---
+title: "Alleego"
+format: html
+---
+
+```{r}
+library(deSolve)
+library(tidyverse)
+```
+
+```{r}
+Allego <- function(t, y, parameters) {
+  #parameters
+  r <- parameters[1]
+  K <- parameters[2]
+  A <- parameters[3]
+  #variables
+  TT <- y[1]
+
+
+  dy    <- c(r * TT * (1-TT/K)*(TT/A-1))
+  list(dy)
+}
+```
+
+```{r}
+#wartości początkowe
+
+#wektor wartości początkowych
+inits_list<- list(
+  start_2 = c(TT=2),
+  start_2.5 = c(TT=2.5),
+  start2.9 = c(TT=2.9),
+  start_3 = c(TT=3),
+  start_3.1 = c(TT=3.1),
+  start_4 = c(TT=4), 
+  start_5 = c(TT=5)
+  )
+
+#parametry
+parameters <- c(r = 0.1, K = 7, A = 3)
+
+#wektor czasów
+dt  <- seq(0,100,0.1)
+
+# Purrrr! imap_dfr(lista, funkcja(wartość, nazwa))
+all_out <- imap_dfr(inits_list, function(init, name)
+  {
+  as.data.frame(lsoda(init, dt, Allego, parameters)) %>% mutate(set = name)
+})
+```
+
+```{r}
+ggplot(all_out, aes(time, TT, color=set)) + 
+  geom_line() + labs(
+    title = "A = 3, K = 6, r = 0.1"
+  )
+```
+
+Znaki pochodnej:
+
+$$
+0<T<A \rightarrow ujemna \\
+T = A \rightarrow 0 \\
+A<T<K \rightarrow dodatnia \\
+T>K \rightarrow ujemna
+$$
+
+Stany stacjonarne jak widać:
+
+$$
+0<T<A \rightarrow 0 \\
+T = A \rightarrow A \\
+A<T<K \rightarrow K \\
+T>K \rightarrow K
+$$
+
+```{r}
+AllegoCART <- function(t, y, parameters) {
+  #parameters
+  r <- parameters[1]
+  K <- parameters[2]
+  A <- parameters[3]
+  kkill <- parameters[4]
+  gamma_E <- parameters[5]
+  p <- parameters[6]
+  #variables
+  TT <- y[1]
+  E <- y[2]
+
+
+  dy    <- c(r * TT * (1-TT/K)*(TT/A-1) - kkill * E * TT,
+             p*E*TT - gamma_E * E)
+  list(dy)
+}
+```
+
+```{r}
+init <- c(TT = 5, E = 6)
+
+parameters <- c(r = 0.1, K = 7, A = 3, kkill = 0.05, gamma_E = 0.5, p = 0.01)
+
+dt <- seq(0,100, 0.1)
+
+out <- as.data.frame(lsoda(init, dt, AllegoCART, parameters))
+
+out_long <- out %>% pivot_longer(cols =c(E,TT), names_to = "Param", values_to = "Warto")
+ggplot(out_long, aes(x=time, y=Warto, color = Param)) + geom_line()
+ggsave("wykresy/4b_0.png")
+```
+
+```{r}
+init <- c(TT = 5, E = 3)
+
+parameters <- c(r = 0.1, K = 7, A = 3, kkill = 0.05, gamma_E = 0.5, p = 0.01)
+
+dt <- seq(0,100, 0.1)
+
+out <- as.data.frame(lsoda(init, dt, AllegoCART, parameters))
+
+out_long <- out %>% pivot_longer(cols =c(E,TT), names_to = "Param", values_to = "Warto")
+ggplot(out_long, aes(x=time, y=Warto, color = Param)) + geom_line()
+ggsave("wykresy/4b_rebound.png")
+```
+
+Komórki CAR-T nie muszą doprowadzić do całkowitego wybicia komórek T. Wystarczy aby doprowadzić komórki T do stanu A, wtedy pochodna zmienia znak i komórki T wymierają same z siebie.
