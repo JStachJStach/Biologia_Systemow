@@ -2,7 +2,11 @@
 ## Zadanie 1
 Stan stacjonarny:
 ![image](Stan_Stacjonarny.jpg)
-Parameter k_kill nie wpływa na stan stacjonarny komórek T.
+
+
+Parameter k_kill nie wpływa na stan stacjonarny komórek T. Jak widać na wykresie poniżej, dla t=10 wartość kkill zostaje zmieniona, jednak T wraca do tego samego punktu
+
+
 ![image](wykresy/1_wplyw_kkill.png)
 ## Zadanie 2
 Podstawiając wartości pod wyliczone stany stacjonarne otrzymujemy Tst = 50 i Est = 38. Takie wartości widać również na wykresie.
